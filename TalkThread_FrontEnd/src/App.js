@@ -10,6 +10,9 @@ import UserRoutes from './Routes/UserRoute.js';
 import { AuthProvider } from './Routes/AuthContex.js';
 import ForgotPassword from './forgotPassword/forgotpassword.js';
 import CreateProfile from './CreateUser/CreateProfile.js';
+import Home from './Home/home.js'
+import Profile from './Profile/profile.js'
+import Createpost from './CreatePost/Createpost.js';
 function AppContent() {
   const location = useLocation();
   const isBackgroundVisible = location.pathname === '/signin' || location.pathname === '/signup';
@@ -32,6 +35,9 @@ function AppContent() {
             <Route element={<UserRoutes />}>
               <Route path='/chat' element={<GenerateChatApp />} />
               <Route path="/CreateProfile" element ={<CreateProfile />} />
+              <Route path="/home" element={<Home/>} />
+              <Route path="/Profile" element={<Profile/>} />
+              <Route path='/Createpost' element={<Createpost/>} />
             </Route>
           </Routes>
         </div>

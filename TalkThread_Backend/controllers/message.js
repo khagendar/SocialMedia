@@ -3,6 +3,7 @@ const ConversationModel = require("../model/Conversation");
 
 class MessageController {
   // Create a new message and update conversation's updatedAt field
+  
   async Message(req, res) {
     const { conversationId, sender, type, subtype, text } = req.body;
     let imageData = null;

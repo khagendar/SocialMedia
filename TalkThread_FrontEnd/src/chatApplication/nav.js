@@ -13,6 +13,10 @@ import socket from '../socket';
 import axios from 'axios';
 import defaultImage from '../CreateUser/defaultImage.png';
 import luffy from '../Images/1729439948488-avatar.png';
+import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
+import ChatIcon from '../Images/chatIcon.webp';
 const Chat = () => {
   const theme = useTheme();
   const [activeButton, setActiveButton] = useState(null);
@@ -49,7 +53,23 @@ const Chat = () => {
 
     if (button === 'home') {
       // setOpenModal(true); // Open the modal when the group button is clicked
-      navigate('/dashboard');
+      navigate('/home');
+    }
+    if (button === 'chat') {
+      // setOpenModal(true); // Open the modal when the group button is clicked
+      navigate('/chat');
+    }
+    if (button === 'Profile') {
+      // setOpenModal(true); // Open the modal when the group button is clicked
+      navigate('/Profile');
+    }
+    if (button === 'Createpost') {
+      // setOpenModal(true); // Open the modal when the group button is clicked
+      navigate('/Createpost');
+    }
+    if (button === 'search') {
+      // setOpenModal(true); // Open the modal when the group button is clicked
+      navigate('/Search');
     }
   };
 
@@ -96,9 +116,58 @@ const Chat = () => {
                   transition: 'border 0.3s ease',
                 }}
               >
-                <img src={home} alt="home" style={{ width: 30, height: 30, objectFit: 'contain' }} />
+                <img src={home} alt="home" style={{ width: 26, height: 26, objectFit: 'contain' }} />
               </IconButton>
               <Divider sx={{ width: '100%', my: 1 }} />
+              
+              <IconButton
+                aria-label="home"
+                size="large"
+                onClick={(event) => handleButtonClick('search', event)}
+                sx={{
+                  border: activeButton === 'search' ? '2px solid black' : 'transparent',
+                  transition: 'border 0.3s ease',
+                }}
+              >
+               <SearchIcon />
+              </IconButton>
+              <Divider sx={{ width: '100%', my: 1 }} />
+              <IconButton
+                aria-label="home"
+                size="large"
+                onClick={(event) => handleButtonClick('chat', event)}
+                sx={{
+                  border: activeButton === 'chat' ? '2px solid black' : 'transparent',
+                  transition: 'border 0.3s ease',
+                }}
+              >
+                <img src={ChatIcon} alt='img' style={{ width: 26, height: 26, objectFit: 'contain',color:"gray" }} />
+              </IconButton>
+              <Divider sx={{ width: '100%', my: 1 }} />
+              <IconButton
+                aria-label="home"
+                size="large"
+                onClick={(event) => handleButtonClick('Createpost', event)}
+                sx={{
+                  border: activeButton === 'Createpost' ? '2px solid black' : 'transparent',
+                  transition: 'border 0.3s ease',
+                }}
+              >
+                  <AddCircleOutlineIcon  />
+              </IconButton>
+              <Divider sx={{ width: '100%', my: 1 }} />
+              <IconButton
+                aria-label="home"
+                size="large"
+                onClick={(event) => handleButtonClick('Profile', event)}
+                sx={{
+                  border: activeButton === 'Profile' ? '2px solid black' : 'transparent',
+                  transition: 'border 0.3s ease',
+                }}
+              >
+                   <PermIdentityOutlinedIcon />
+              </IconButton>
+              
 
               {/* <IconButton
                 aria-label="group"

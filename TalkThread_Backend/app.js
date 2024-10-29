@@ -5,7 +5,7 @@ const connection = require("./database/database");
 const BlockedRoute = require("./routes/BlockedRoutes");
 const CreateProfile = require("./Multer/multer");
 const path = require('path');
-
+const Post =require("./routes/post");
 const app = express();
 
 const PORT = 5000;
@@ -21,7 +21,7 @@ app.use(cors({
 app.use("/sign", route);
 app.use("/", BlockedRoute);
 app.use("/CreateProfile", CreateProfile); // Use the correct CreateProfile router
-
+app.use("/post", Post); // Use Post router
 app.use('/images', express.static(path.join(__dirname, 'uploads')));
 
 app.listen(PORT, () => {
