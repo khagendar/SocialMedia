@@ -115,7 +115,7 @@ const SearchAndChat = ({ handleClose, CUser, onSelectChat, fetchConversations })
     try {
       const conversation = await fetchOrCreateChat(CUser._id, receiverId, fetchConversations);
       onSelectChat(conversation);
-      handleClose(); // Close the search component directly
+      handleClose(); 
     } catch (error) {
       console.error('Error initiating chat:', error);
     }

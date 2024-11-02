@@ -156,7 +156,7 @@ export function ReplyMessage({ ele, own, receiver, refreshConversation }) {
   );
 }
 
-export function MediaMessage({ ele, own, receiver, refreshConversation}) {
+export function MediaMessage({ ele, own, receiver, refreshConversation,openImageModal}) {
   const [reaction, setReaction] = useState(null);
   const [hovered, setHovered] = useState(false);
   useEffect(() => {
@@ -195,7 +195,9 @@ export function MediaMessage({ ele, own, receiver, refreshConversation}) {
           <img
             src={`data:image/jpeg;base64,${ele.image}`}
             alt={ele.text || "Message image"}
-            style={{ maxHeight: 210, borderRadius: "10px" }}
+            style={{ maxHeight: 210, borderRadius: "10px",cursor:'pointer' }}
+            onClick={()=>{openImageModal(`data:image/jpeg;base64,${ele.image}`)}}
+            
         />          
          <Typography variant="body2" color={"black"} p={0.5}>{ele.text}</Typography>
             <Typography variant="body2" color={"black"} sx={{ fontSize: "0.7rem", textAlign: "right" }}>

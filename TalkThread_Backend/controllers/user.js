@@ -84,6 +84,36 @@ class LoginController {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
-}
+  async followers(req, res) {
+    const { userId } = req.params;
+    const { action, currentUserId } = req.body;  // Destructure currentUserId from req.body
+    // console.log("Target User ID:", userId);
+    // console.log("Current User ID:", currentUserId);
+    // console.log("Action:", action);
 
+    try {
+        const userToFollow = await model.findById(userId);
+        const currentUser = await model.findById(currentUserId);
+        
+        if (action === 'follow') {
+            // Add userId to currentUser's following and currentUserId to userToFollow's followers if not already present
+            if (!currentUser.following.includes(userToFollow._id)) {
+                currentUser.following.push(userToFollow._id);
+                userToFollow.follwers.push(currentUser._id);
+            }
+        } else {
+            // Remove userId from following and followers arrays if already present
+            currentUser.following = currentUser.following.filter(id => id.toString() !== userToFollow._id.toString());
+            userToFollow.follwers = userToFollow.follwers.filter(id => id.toString() !== currentUser._id.toString());
+        }
+
+        await currentUser.save();
+        await userToFollow.save();
+
+        res.status(200).json({ message: action === 'follow' ? 'Followed successfully' : 'Unfollowed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while updating follow status' });
+    }
+}
+}
 module.exports = new LoginController();

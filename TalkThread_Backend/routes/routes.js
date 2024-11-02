@@ -5,6 +5,7 @@ const ConversationController = require('../controllers/conversation');
 const MessageController=require('../controllers/message');
 const userController =require('../controllers/userController');
 const CreateUserProfile=require('../controllers/CreateProfile');
+const AllPost=require('../controllers/myposts');
 const multer=require('multer');
 const storage = multer.memoryStorage(); // Store image in memory as a Buffer
 const upload = multer({ storage: storage });
@@ -40,4 +41,6 @@ router.delete('/DeleteMessage/:id',MessageController.DeleteMessage);
 router.put('/UpdateConversationDate/:conversationId',ConversationController.updateConversationDate);
 router.put('/reaction/:messageId',MessageController.Reaction);
 router.put('/reply/:messageId',MessageController.Reply);
+router.get('/getPost/:userId',AllPost.getPosts);
+router.put('/follow/:userId',LoginController.followers);
 module.exports = router;

@@ -82,7 +82,7 @@ export default function CreateProfile() {
 
   // Redirect to dashboard if profile is created successfully
   if (redirect) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return (

@@ -236,7 +236,7 @@ export default function ChatList() {
 
   useEffect(() => {
     const handleConversationUpdate = (data) => {
-      // console.log("chatlist",data);
+      console.log("chatlist",data);
         fetchConversations();
     };
 

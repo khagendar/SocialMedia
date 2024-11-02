@@ -1,6 +1,6 @@
 import {
     Box, Stack, styled, Avatar, Badge, Typography,
-    IconButton, TextField, InputAdornment
+    IconButton, TextField, InputAdornment,Modal
   } from '@mui/material';
   import React, { useEffect, useRef, useState, useCallback } from 'react';
   import { Image, Smiley, PaperPlaneTilt, Phone, Info } from '@phosphor-icons/react';
@@ -197,7 +197,19 @@ export default function Conversation({ conversation, open, CUser, fetchConversat
     const [receiverBlocked,setReceiverBlocked]=useState(false);
     const [userData, setUserData] = useState(null);
    
-    // Initialize socket connection once when the app starts
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
+    // Function to open image in modal
+    const openImageModal = (imageSrc) => {
+        setSelectedImage(imageSrc);
+        setImageModalOpen(true);
+    };
+
+    const closeImageModal = () => {
+        setImageModalOpen(false);
+        setSelectedImage(null);
+    };
    
     // console.log("ConversationMembers:",conversation);
     useEffect(() => {
@@ -606,7 +618,7 @@ useEffect(() => {
               <Box sx={{ width: '100%', height: 'calc(100vh - 70px)', backgroundColor: '#F0F4FA', overflowY: 'scroll' }}>
                   {conversationMessages.map((m) => (
                       <div key={m._id}>
-                          <Messages message={m} own={m.sender === CUser._id} receiver={receiver} refreshConversation={refreshConversation} fetchConversations={fetchConversations}  />
+                          <Messages message={m} own={m.sender === CUser._id} receiver={receiver} refreshConversation={refreshConversation} fetchConversations={fetchConversations}  openImageModal={openImageModal}  />
                       </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -640,7 +652,16 @@ useEffect(() => {
                       {isBlocked? "User is blocked" : ""}
                   </Typography>
               </Stack>
-          </>
+              <Modal
+                        open={imageModalOpen}
+                        onClose={closeImageModal}
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <Box sx={{ maxWidth: '90vw', maxHeight: '90vh' }}>
+                            <img src={selectedImage} alt="Enlarged" style={{ width: '100%', height: '500px' }} />
+                        </Box>
+                    </Modal>
+                </>
       ) : (
           <Stack justifyContent="center" alignItems="center" height="100%">
               <Typography variant="h6" color="textSecondary">

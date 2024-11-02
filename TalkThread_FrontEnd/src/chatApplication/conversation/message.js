@@ -2,13 +2,13 @@ import React from 'react';
 import { Box, Stack } from '@mui/material';
 import { Timeline, MediaMessage, ReplyMessage, TextMessage } from './messageTypes';
 
-export default function ChatData({ message, own,receiver,refreshConversation}) {
+export default function ChatData({ message, own,receiver,refreshConversation,openImageModal}) {
     // console.log(message);
     const renderMessage = (message) => {
         if (message.type === "msg") {
             switch (message.subtype) {
                 case "image":
-                    return <MediaMessage key={message.id} ele={message} own={own} receiver={receiver} refreshConversation={refreshConversation} />;
+                    return <MediaMessage key={message.id} ele={message} own={own} receiver={receiver} refreshConversation={refreshConversation} openImageModal={openImageModal}  />;
                 case "reply":
                     return <ReplyMessage key={message.id} ele={message} own={own} receiver={receiver} refreshConversation={refreshConversation}/>;
                 default:

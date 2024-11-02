@@ -17,6 +17,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
 import ChatIcon from '../Images/chatIcon.webp';
+import Dictionary from '../Images/9100963.png';
+import Dict from '../chatApplication/Dictionary';
 const Chat = () => {
   const theme = useTheme();
   const [activeButton, setActiveButton] = useState(null);
@@ -85,6 +87,7 @@ const Chat = () => {
     auth.logout();
     navigate("/");
   };
+  const [modalOpen, setModalOpen] = useState(false);
   return (
     <Box height={'100vh'} sx={{ borderRight: "1px solid black" }}>
       <Box
@@ -100,7 +103,7 @@ const Chat = () => {
       >
         <Box sx={{ width: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <Stack direction="column" alignItems="center" width="100%" spacing={3}>
-            <IconButton aria-label="logo" size="large" onClick={()=>{navigate('/dashboard')}}>
+            <IconButton aria-label="logo" size="large" onClick={()=>{navigate('/home')}}>
               <img src={logo} alt="logo" style={{ width: 30, height: 30, objectFit: 'contain' }} />
             </IconButton>
 
@@ -167,6 +170,18 @@ const Chat = () => {
               >
                    <PermIdentityOutlinedIcon />
               </IconButton>
+              <Divider sx={{ width: '100%', my: 1 }} />
+              <IconButton
+                aria-label="home"
+                size="large"
+                onClick={(event) => handleButtonClick('Dictionary', event)}
+                sx={{
+                  border: activeButton === 'Dictionary' ? '2px solid black' : 'transparent',
+                  transition: 'border 0.3s ease',
+                }}
+              >
+                  <img src={Dictionary} alt='img' style={{width:26,height:26}}onClick={() => setModalOpen(true)} />
+              </IconButton>
               
 
               {/* <IconButton
@@ -187,7 +202,7 @@ const Chat = () => {
             <IconButton
               aria-label="profile"
               size="large"
-              onClick={(event) => handleButtonClick('profile', event)}
+              onClick={(event) => handleButtonClick('Profile', event)}
               sx={{
                 border: activeButton === 'profile' ? '2px solid black' : 'transparent',
                 transition: 'border 0.1s ease',
@@ -268,6 +283,7 @@ const Chat = () => {
             <Group open={openModal} handleClose={handleClose} />
           </Box>
         </Modal>
+        <Dict open={modalOpen} onClose={() => setModalOpen(false)} />
       </Box>
     </Box>
   );

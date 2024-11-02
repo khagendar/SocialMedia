@@ -140,10 +140,10 @@ io.on('connection', (socket) => {
     //     io.to(newMessage.conversationId).emit('newMessage', newMessage);
     // });
 
-    socket.on("newConversation", ({ receiverId, conversationId }) => {
+    socket.on("newConversation", ({ receiverId,  }) => {
         const receiver = getUser(receiverId);
         if (receiver) {
-            io.to(receiver.socketId).emit("getNewConversation", conversationId);
+            io.to(receiver.socketId).emit("getNewConversation",receiverId);
         }
     });
 

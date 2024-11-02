@@ -68,7 +68,7 @@ export default function Login({ action }) {
       if (action === "Sign In") {
         const res = await auth.login(details); // Call the login method from AuthContext
         toast.success("Login successful");
-        navigate('/chat'); // Navigate to the chat page after login
+        navigate('/home'); // Navigate to the chat page after login
       } else {
         const res = await auth.signup(details); // Call the signup method from AuthContext
         console.log(res);

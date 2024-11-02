@@ -39,7 +39,13 @@ const UserSchema = new mongoose.Schema(
     blockedUsers: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     ], // Array of blocked users
-  },
+  following:[
+    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  ],
+  follwers:[
+    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  ]
+},
   { timestamps: true } // Automatically include createdAt and updatedAt fields
 );
 

@@ -14,21 +14,20 @@ class ConversationController {
   }
   async conversationGet(req, res) {
     try {
-        // Ensure _id is in the correct format if it's an ObjectId
-        const userId = req.params.userId;
-
-        // Find conversations where the userId is in the members array
-        const conversations = await ConversationModel.find({
-            members: { $in: [userId] }
-        }).sort({updatedAt:-1});
-
-        // Return the conversations
-        res.status(200).json(conversations);
+      const userId = req.params.userId; // Extract userId correctly
+      console.log("User ID:", userId);
+      
+      const conversations = await ConversationModel.find({
+        members: userId // Simplified syntax; $elemMatch not required for simple array matching
+      }).sort({ updatedAt: -1 });
+      
+      console.log("Conversations:", conversations);
+      res.status(200).json(conversations);
     } catch (error) {
-        // Return a more descriptive error message
-        res.status(500).json({ message: "Error retrieving conversations", error });
+      console.error("Error retrieving conversations:", error);
+      res.status(500).json({ message: "Error retrieving conversations", error });
     }
-}
+  }
 
 async  deleteConversation(req, res) {
   try {
