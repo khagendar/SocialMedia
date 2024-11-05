@@ -17,6 +17,10 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    if (newPassword.length < 6) {
+      setError('New password must be at least 6 characters long!');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match!');
       return;

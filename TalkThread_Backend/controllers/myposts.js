@@ -49,6 +49,67 @@ class MyPosts {
       return res.status(500).json({ message: 'An error occurred while fetching posts.' });
     }
   }
+  async FriendSuggestions(req, res) {
+    const userId = req.params.userId;
+
+    try {
+        // Fetch the current user, including their following and followers
+        const currentUser = await UserModel.findById(userId).populate('following follwers');
+
+        // Get the IDs of users that the current user follows
+        const userFollowingIds = currentUser.following.map(user => user._id.toString());
+
+        // Get the IDs of users who follow the current user
+        const userFollowersIds = currentUser.follwers.map(user => user._id.toString());
+
+        // Find other users who are:
+        // - not the current user
+        // - not in the current user's following list (i.e., users they aren't already following)
+        const suggestions = await UserModel.find({
+            _id: { $ne: userId, $nin: userFollowingIds } // Exclude the current user and users they already follow
+        }).populate('follwers following'); // Populate followers and following for each suggestion
+
+        // Prepare the suggestions with mutual friends count and filtering logic
+        const results = suggestions.map(user => {
+            // Get mutual friends by comparing the user's followers with the current user's following list
+            const mutualFollowers = user.follwers.filter(follower =>
+                userFollowingIds.includes(follower._id.toString())
+            );
+
+            // Include users who are followed by the current user's followers but whom the user isn't following yet
+            const followersYouDontFollow = user.follwers.filter(follower =>
+                !userFollowingIds.includes(follower._id.toString()) && userFollowersIds.includes(follower._id.toString())
+            );
+
+            // Check the followers of the user's followers and find users that the current user isn't following
+            const extendedSuggestions = user.follwers.flatMap(follower => 
+                follower.following.filter(followedUser =>
+                    !userFollowingIds.includes(followedUser._id.toString()) &&
+                    followedUser._id.toString() !== userId
+                )
+            );
+
+            // Create a unique set of extended users to avoid duplicates
+            const uniqueExtendedSuggestions = Array.from(new Set(extendedSuggestions.map(user => user._id.toString())));
+
+            return {
+                ...user.toObject(),
+                mutualFriendsCount: mutualFollowers.length,
+                followersYouDontFollowCount: followersYouDontFollow.length,
+                mutualFriends: mutualFollowers, // Optional: include the actual mutual friends if needed
+                followersYouDontFollow, // Optional: include followers that the user isn’t following back
+                extendedSuggestionsCount: uniqueExtendedSuggestions.length,
+                extendedSuggestions: uniqueExtendedSuggestions // Include suggestions from followers of followers
+            };
+        }).filter(user => user.mutualFriendsCount > 0 || user.followersYouDontFollowCount > 0 || user.extendedSuggestionsCount > 0); // Filter users with at least one mutual friend, relevant follower, or extended suggestions
+
+        res.json(results);
+    } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        res.status(500).send('Internal Server Error');
+    }
+}
+
 }
 
 module.exports = new MyPosts();

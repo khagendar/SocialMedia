@@ -12,5 +12,6 @@ router.get('/getPost/:userId',PostController.getProfilePosts);
 router.put('/addComment/:postId',PostController.Comment);
 router.put('/like/:postId',PostController.Likes);
 router.get('/Comments/:postId',PostController.getComments);
-router.get('/getHomePost/:postId', PostController.getPost)
+router.get('/getHomePost/:postId', PostController.getPost);
+router.delete('/deletePost/:postId',PostController.DeletePost);
 module.exports = router;

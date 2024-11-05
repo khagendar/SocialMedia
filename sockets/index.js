@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const {MessageModel}=require('../TalkThread_Backend/model/Message');
+const { response } = require('express');
 // Initialize Socket.IO server on port 8900 with CORS enabled for localhost:3000
 const io = new Server(8900, {
     cors: {
@@ -36,6 +37,7 @@ const getUser = (userId) => {
 // Emit user status update to all clients
 const emitUserStatus = () => {
     io.emit("getUsers", users);
+    console.log(users);
 };
 
 // Event listener for new connections
@@ -164,6 +166,30 @@ io.on('connection', (socket) => {
         console.log("msgsender");
  })
 
+ socket.on("comment",((selectedPostId)=>{
+    console.log(selectedPostId);
+   io.emit("getComment",selectedPostId);
+ }))
+
+ socket.on("Likes",((like)=>{
+    io.emit("getLikes",like);
+ }))
+
+ socket.on("deletePost",((selectedPostId)=>{
+io.emit("postDeleted",selectedPostId);
+ }))
+ socket.on("createPost",((res)=>{
+    io.emit("postCreated",res);
+    
+ }))
+
+ socket.on("followClick",((res)=>{
+    io.emit("followData",res);
+ }))
+
+ socket.on("deleteAccount",((userId)=>{
+    io.emit("AccountDeleted",userId);
+ }))
     // Handle the disconnect event when it happens
     socket.on("disconnect", () => {
         console.log("A user disconnected:", socket.id);

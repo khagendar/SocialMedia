@@ -39,29 +39,29 @@ const Profile = ({ isBlocked, setIsBlocked, receiverDetails, CurrentUser, refres
         }
     };
 
-    useEffect(() => {
-        console.log("isBlocked state changed:", isBlocked);
-    }, [isBlocked]);
+    // useEffect(() => {
+    //     console.log("isBlocked state changed:", isBlocked);
+    // }, [isBlocked]);
 
-    useEffect(() => {
-        // Listen to socket events for blocking and unblocking
-        socket.on('blockeUser', ({ CurrentUser }) => {
-            setRemove(true);  // Remove the block button
-            setIsBlocked(true);  // Set the blocked state
-            refreshConversation();
-        });
+    // useEffect(() => {
+    //     // Listen to socket events for blocking and unblocking
+    //     socket.on('blockeUser', ({ CurrentUser }) => {
+    //         setRemove(true);  // Remove the block button
+    //         setIsBlocked(true);  // Set the blocked state
+    //         refreshConversation();
+    //     });
 
-        socket.on('UnblockUser', ({ CurrentUser }) => {
-            setIsBlocked(false);
-            setRemove(false); // Show the block button
-            refreshConversation();
-        });
+    //     socket.on('UnblockUser', ({ CurrentUser }) => {
+    //         setIsBlocked(false);
+    //         setRemove(false); // Show the block button
+    //         refreshConversation();
+    //     });
 
-        return () => {
-            socket.off('blockeUser');
-            socket.off('UnblockUser');
-        };
-    }, [CurrentUser._id]);
+    //     return () => {
+    //         socket.off('blockeUser');
+    //         socket.off('UnblockUser');
+    //     };
+    // }, [CurrentUser._id]);
 
     useEffect(() => {
         // Check if the current user is the receiver of a block
@@ -80,10 +80,10 @@ const Profile = ({ isBlocked, setIsBlocked, receiverDetails, CurrentUser, refres
                 <Avatar alt="" src={userData?.userProfile?.profile || ''} sx={{ width: 100, height: 100 }} />
                 <Stack alignItems={"center"}>
                     <Typography component="div" sx={{ fontWeight: "500", fontSize: "20px" }}>
-                        {userData.userProfile.username}
+                        {receiverDetails?.name}
                     </Typography>
                     <Typography variant='body2' color="textSecondary">
-                        {userData.userProfile.bio}
+                        {userData.userProfile?.username}
                     </Typography>
                 </Stack>
             </Stack>

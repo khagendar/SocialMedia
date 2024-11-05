@@ -15,13 +15,13 @@ class ConversationController {
   async conversationGet(req, res) {
     try {
       const userId = req.params.userId; // Extract userId correctly
-      console.log("User ID:", userId);
+      // console.log("User ID:", userId);
       
       const conversations = await ConversationModel.find({
         members: userId // Simplified syntax; $elemMatch not required for simple array matching
       }).sort({ updatedAt: -1 });
       
-      console.log("Conversations:", conversations);
+      // console.log("Conversations:", conversations);
       res.status(200).json(conversations);
     } catch (error) {
       console.error("Error retrieving conversations:", error);

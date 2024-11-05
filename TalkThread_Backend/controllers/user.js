@@ -1,7 +1,9 @@
 const model = require("../model/user");
 const bcrypt = require('bcrypt');
 const auth = require('./auth'); // Assuming you have a file for authentication utilities
-
+const UserModel = require("../model/user");
+const PostModel =require("../model/post");
+const ConversationModel=require('../model/Conversation');
 class LoginController {
   // Sign Up
   async signup (req, res)  {
@@ -84,6 +86,40 @@ class LoginController {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
+
+  async changePassword(req,res){
+    const { currentPassword, newPassword, email } = req.body;
+
+    try {
+        // Find the user by email
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Verify the current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Current password is incorrect" });
+        }
+
+        // Validate the new password (e.g., check length, complexity)
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "New password must be at least 6 characters long" });
+        }
+
+        // Hash the new password and update the user's password in the database
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        // Send a success response
+        res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+        console.error("Error changing password:", error);
+        res.status(500).json({ message: "Server error. Please try again later." });
+    }
+  }
   async followers(req, res) {
     const { userId } = req.params;
     const { action, currentUserId } = req.body;  // Destructure currentUserId from req.body
@@ -115,5 +151,46 @@ class LoginController {
         res.status(500).json({ error: 'An error occurred while updating follow status' });
     }
 }
+
+
+async  deleteUserAccount(req,res) {
+  const userId=req.params.userId;
+    try {
+        // 1. Delete all posts created by the user
+        await PostModel.deleteMany({ userId });
+
+        // 2. Remove comments made by the user on other posts
+        await PostModel.updateMany(
+            { "comments.userId": userId }, // Find posts containing comments by the user
+            { $pull: { comments: { userId } } } // Remove the user’s comments from these posts
+        );
+
+        await PostModel.updateMany(
+          { likes: userId },
+          { $pull: { likes: userId } } // Remove the user's ID from likes array
+      );
+
+         await ConversationModel.deleteMany({
+          members: userId
+      });
+      await UserModel.updateMany(
+        { following: userId },
+        { $pull: { following: userId } }
+        );
+
+        await UserModel.updateMany(
+            { follwers: userId },
+            { $pull: { follwers: userId } }
+        );
+        // 3. Delete the user account
+        await UserModel.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: "User account and associated data deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting user account:", error);
+        res.status(500).json({ error: 'An error occurred while deleting account' });
+    }
+}
+
 }
 module.exports = new LoginController();

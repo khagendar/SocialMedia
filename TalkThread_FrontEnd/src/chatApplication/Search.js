@@ -7,6 +7,17 @@ import socket from '../socket';
 
 // Chat Account Component: Displays user details
 const ChatAccounts = ({ user, onClick }) => {
+  const byteArrayToBase64 = (byteArray) => {
+    if (!Array.isArray(byteArray)) {
+        console.error('Provided data is not an array');
+        return null;
+    }
+    const binaryString = byteArray.map(byte => String.fromCharCode(byte)).join('');
+    return btoa(binaryString);
+};
+
+const base64String = user?.image?.data?.data ? byteArrayToBase64(user.image.data.data) : '';
+const imageUrl = base64String ? `data:image/jpeg;base64,${base64String}` : '';
   return (
     <Box
       onClick={onClick}
@@ -22,10 +33,10 @@ const ChatAccounts = ({ user, onClick }) => {
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Stack direction="row" spacing={2}>
-          <Avatar src={user?.avatar || '/default-avatar.png'} />
+          <Avatar src={imageUrl || '/default-avatar.png'} />
           <Stack spacing={0.3}>
             <Typography variant="subtitle2">{user?.name || 'User'}</Typography>
-            <Typography variant="caption">{'Keep always smile on your face'}</Typography>
+            <Typography variant="caption">{user.username}</Typography>
           </Stack>
         </Stack>
       </Stack>

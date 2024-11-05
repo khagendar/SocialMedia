@@ -15,18 +15,21 @@ import {
   CDropdownMenu,
   CButton,
 } from '@coreui/react';
+import './navbar.css'
+import { useAuth } from '../Routes/AuthContex';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import menuIcon from '../chatApplication/images/menu.png';
+import socket from '../socket';
 const Navbar = () => {
+  const auth =useAuth();
   const navigate = useNavigate(); // Correctly use useNavigate
   const [anchorEl, setAnchorEl] = useState(null);
   // const [openModal, setOpenModal] = useState(false);
-  const Logout = (event) => {
-    event.preventDefault();
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    navigate('/signin'); // Use navigate to redirect
+    const Logout = () => {
+      console.log("Logging out...");
+      socket.emit("logout");
+      auth.logout();
+      navigate("/signin");
   };
   useEffect(() => {
     const token = localStorage.getItem('token'); // Check for token
@@ -41,111 +44,107 @@ const Navbar = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  return (
-    <CSidebar className="border-end" colorScheme="dark">
-      <CSidebarNav>
-        <div
-          style={{
-            display: 'flex',
-            gap: '8px',
-            flexDirection: 'column',
-            height: '100%', // Ensure the sidebar takes the full height
-          }}
-        >
-          <Box display={'flex'} justifyContent={"flex-start"}>
-          <Typography 
-          fontSize={'20px'}
-          sx={{ fontFamily: 'Pacifico, cursive'}} 
-          margin={4}
-          className='heading'
-        >
-          TalkThread 
-        </Typography>
-        </Box>
+ const handleSettings =()=>{
+  navigate('/settings');
+ }
+  return  (
+    <div style={{ borderRight: '1px solid black', height: '100vh' }}> {/* Wrap with a div */}
+      <CSidebar className="border-end"> {/* No custom class here */}
+        <CSidebarNav>
           <div
             style={{
-              flexGrow: 2,
               display: 'flex',
+              gap: '8px',
               flexDirection: 'column',
-              gap: '8px', // Make sure items stack vertically
+              height: '100%', // Ensure the sidebar takes the full height
             }}
           >
-            <CNavItem href="/home">
-              <CIcon customClassName="nav-icon" icon={cilHome} /> Home
-            </CNavItem>
-            <CNavItem href="/Search">
-              <CIcon customClassName="nav-icon" icon={cilSearch} /> Search
-            </CNavItem>
-            <CNavItem href="/chat">
-              <CIcon customClassName="nav-icon" icon={cilChatBubble} /> Chat
-            </CNavItem>
-            <CNavItem href="/Createpost">
-              <CIcon customClassName="nav-icon" icon={cilPlus} /> Create
-            </CNavItem>
-            <CNavItem href="/Profile">
-              <CIcon customClassName="nav-icon" icon={cilUser} /> Profile
-            </CNavItem>
-          </div>
-          {/* <CDropdown>
-            <CDropdownToggle href="#" style={{ display: 'flex', flexDirection: 'row' }} color="dark">
-              Options
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem href="#">Settings</CDropdownItem>
-              <CDropdownItem>
-                <CButton color="secondary" variant="ghost" onClick={Logout}>
-                  LogOut
-                </CButton>
-              </CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown> */}
-           <IconButton onClick={handleMenuOpen} display={"flex"} sx={{alignItems:'flex-start',justifyContent:'flex-start'}}>
-           <img src={menuIcon} alt="menu" style={{ width: 30, height: 30, objectFit: 'contain' }} />
-          </IconButton>
-
-          {/* Menu component */}
-          <Menu
-            id="basic-menu"
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'left',
-            }}
-          >
-            {/* Menu item for Settings */}
-            <MenuItem onClick={handleMenuClose}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Gear size={25} />
-                <Typography variant="body2" fontSize="15px">
-                  Settings
-                </Typography>
-              </Stack>
-            </MenuItem>
-
-            {/* Menu item for Logout */}
-            <MenuItem
-              onClick={() => {
-                handleMenuClose();
-                Logout();
+            <Box display={'flex'} justifyContent={"flex-start"}>
+              <Typography 
+                fontSize={'20px'}
+                sx={{ fontFamily: 'Pacifico, cursive'}} 
+                margin={4}
+                className='heading'
+              >
+                TalkThread 
+              </Typography>
+            </Box>
+            <div
+              style={{
+                flexGrow: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px', // Make sure items stack vertically
               }}
             >
-              <Typography variant="body2" fontSize="15px">
-                Log out
+              <CNavItem href="/home">
+                <CIcon customClassName="nav-icon" icon={cilHome} /> <strong>Home</strong>
+              </CNavItem>
+              <CNavItem href="/Search">
+                <CIcon customClassName="nav-icon" icon={cilSearch} /> <strong>Search</strong>
+              </CNavItem>
+              <CNavItem href="/chat">
+                <CIcon customClassName="nav-icon" icon={cilChatBubble} /><strong> Chat</strong>
+              </CNavItem>
+              <CNavItem href="/Createpost">
+                <CIcon customClassName="nav-icon" icon={cilPlus} /> <strong>Create</strong>
+              </CNavItem>
+              <CNavItem href="/Profile">
+                <CIcon customClassName="nav-icon" icon={cilUser} /> <strong>Profile</strong>
+              </CNavItem>
+            </div>
+            <Box display={'flex'} flexDirection={'row'} alignItems={'center'} marginTop={30}>
+              <IconButton onClick={handleMenuOpen} display={"flex"} sx={{alignItems:'flex-start', justifyContent:'flex-start'}}>
+                <img src={menuIcon} alt="menu" style={{ width: 30, height: 30, objectFit: 'contain' }} />
+              </IconButton>
+              <Typography>
+                More
               </Typography>
-            </MenuItem>
-          </Menu>
-        </div>
-      </CSidebarNav>
-    </CSidebar>
+            </Box>
+            {/* Menu component */}
+            <Menu
+              id="basic-menu"
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'basic-button',
+              }}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
+            >
+              {/* Menu item for Settings */}
+              <MenuItem onClick={handleMenuClose}>
+                <Stack direction="row" spacing={2} alignItems="center" onClick={() => { handleSettings(); }}>
+                  <Gear size={25} />
+                  <Typography variant="body2" fontSize="15px">
+                    Settings
+                  </Typography>
+                </Stack>
+              </MenuItem>
+
+              {/* Menu item for Logout */}
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  Logout();
+                }}
+              >
+                <Typography variant="body2" fontSize="15px">
+                  Log out
+                </Typography>
+              </MenuItem>
+            </Menu>
+          </div>
+        </CSidebarNav>
+      </CSidebar>
+    </div>
   );
 };
 

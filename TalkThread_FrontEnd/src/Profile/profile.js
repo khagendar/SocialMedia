@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Avatar, Box, Typography, Grid, Card, CardMedia, Divider, Modal, IconButton } from '@mui/material';
+import React, { useState, useEffect,useRef } from 'react';
+import { Avatar, Box, Typography, Grid, Card, CardMedia, Divider, Modal, IconButton, Icon ,Menu,MenuItem} from '@mui/material';
 import Navbar from '../Home/navbar';
 import axios from 'axios';
 import { useAuth } from '../Routes/AuthContex';
@@ -7,8 +7,18 @@ import { useParams } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
 import {Favorite,FavoriteBorder} from '@mui/icons-material';
 import { PaperPlaneTilt} from '@phosphor-icons/react';
+import socket from '../socket'
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useNavigate } from 'react-router-dom';
 const UserProfile = () => {
+    const timeoutRef = useRef(null);
+    const [isListModalOpen, setIsListModalOpen] = useState(false);
+    const [listType, setListType] = useState(''); // 'followers' or 'following'
+    const [listData, setListData] = useState([]);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const isMenuOpen = Boolean(anchorEl);
     const auth = useAuth();
+    const navigate=useNavigate();
     const [userData, setUserData] = useState('');
     const [isFollowing, setIsFollowing] = useState(false);
     const [posts, setPosts] = useState(null);
@@ -21,20 +31,24 @@ const UserProfile = () => {
     const[selectedPostId,setSelectedPostId]=useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
     const [comments, setComments] = useState([]);
+    const[fetchData,setFetchedData]=useState([]);
+    const [postIdData,setPostData]=useState(null);
+    const [date,setDate]=useState("Now");
+    const fetchUserData = async () => {
+        try {
+            const userRes = await axios.get(`http://localhost:5000/sign/user/${auth?.user?._id}`);
+            const followedStatus = Array.isArray(userRes.data.following) && userRes.data.following.includes(userId);
+            setIsFollowing(followedStatus);
+
+            const profileRes = await axios.get(`http://localhost:5000/sign/user/${userId || auth?.user?._id}`);
+            setUserData(profileRes.data);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    };
+
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userRes = await axios.get(`http://localhost:5000/sign/user/${auth?.user?._id}`);
-                const followedStatus = Array.isArray(userRes.data.following) && userRes.data.following.includes(userId);
-                setIsFollowing(followedStatus);
-
-                const profileRes = await axios.get(`http://localhost:5000/sign/user/${userId || auth?.user?._id}`);
-                setUserData(profileRes.data);
-            } catch (error) {
-                console.error('Error fetching user data:', error);
-            }
-        };
-
+       
         if (auth?.user?._id) {
             fetchUserData();
         }
@@ -70,9 +84,12 @@ const UserProfile = () => {
                 action,
                 currentUserId: auth?.user?._id
             });
+            
 
             if (res.status === 200) {
                 setIsFollowing(prev => !prev);
+                socket.emit("followClick",res);
+                console.log(res);
             } else {
                 console.error('Error updating follow status');
             }
@@ -80,15 +97,35 @@ const UserProfile = () => {
             console.error('Failed to toggle follow status:', error);
         }
     };
+    useEffect(()=>{
+        socket.on("followData",fetchUserData);
+    },[fetchUserData]);
 
+    useEffect(()=>{
+        socket.on("AccountDeleted",fetchUserData);
+    },[fetchUserData]);
+    const fetchUserPosts = async () => {
+        try {
+            const res = await axios.get(`http://localhost:5000/post/getPost/${userId || auth?.user?._id}`);
+            setPosts(res.data);
+        } catch (error) {
+            console.error('Error fetching user posts:', error);
+        }
+    };
+
+    // if (auth?.user?._id) {
+    //     fetchUserPosts();
+    // }
     const openModal = async (imageData,postId,post) => {
         setSelectedImage(imageData);
        setSelectedPostId(postId);
        setSelectedPost(post);
        try {
+        console.log(postId);
         const res = await axios.get(`http://localhost:5000/post/getHomePost/${postId}`); // Ensure the endpoint returns like status
         const postData = res.data;
         console.log(postData);
+        setPostData(postData);
         // Set the liked state and like count based on the fetched data
         setIsLiked(postData.likes.includes(auth?.user?._id)); 
         console.log(isLiked);
@@ -104,6 +141,7 @@ const UserProfile = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setSelectedImage(null);
+      
     };
     useEffect(() => {
         if (selectedPostId) {
@@ -111,13 +149,22 @@ const UserProfile = () => {
         }
     }, [selectedPostId]);
 
-    const handleLike = async() => {
-        const res= await axios.put(`http://localhost:5000/post/like/${selectedPostId}`,{
-            userId:auth?.user?._id
-        });
-        console.log(res.data);
-        setIsLiked((prevIsLiked) => !prevIsLiked);
-        setLikeCount(res.data.likeCount);
+    const handleLike = async () => {
+        try {
+            const res = await axios.put(`http://localhost:5000/post/like/${selectedPostId}`, {
+                userId: auth?.user?._id
+            });
+            console.log(res.data);
+    
+            // Emit updated like count to the server
+            socket.emit("Likes", res.data.likeCount);
+    
+            // Toggle like state and update like count
+            setIsLiked((prevIsLiked) => !prevIsLiked);
+            setLikeCount(res.data.likeCount);
+        } catch (error) {
+            console.error("Error liking the post:", error);
+        }
     };
     
 
@@ -129,6 +176,7 @@ const UserProfile = () => {
                     text: commentText,
                     name:auth?.user?.name
                 });
+                socket.emit("comment",selectedPostId);
                 setCommentText(''); 
                 fetchPost(selectedPostId);
             } catch (error) {
@@ -149,7 +197,121 @@ const UserProfile = () => {
             console.error("Error fetching post data:", error);
         }
     };
+    useEffect(() => {
+        if (selectedPostId) {
+            fetchPost(selectedPostId); // Fetch when selectedPostId is valid
+        }
+    }, []);
+    useEffect(()=>{
+        socket.on("getComment",(selectedPostId)=>{
+            console.log(selectedPostId);
+            fetchPost(selectedPostId);
+        })
+     })
+     useEffect(() => {
+        const handleGetLikes = (data) => {
+            setLikeCount(data);
+        };
+    
+        // Listen for "getLikes" event
+        socket.on("getLikes", handleGetLikes);
+    
+        // Cleanup function to remove listener on component unmount or re-render
+        return () => {
+            socket.off("getLikes", handleGetLikes);
+        };
+    }, []);
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
 
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+    const handleDeletePost = async(selectedPostId) => {
+        console.log("Post deleted",selectedPostId); 
+        const res= await axios.delete(`http://localhost:5000/post/deletePost/${selectedPostId}`);
+        socket.emit("deletePost",selectedPostId);
+        fetchUserPosts();
+        closeModal();
+        console.log(res);
+    };
+    const openListModal = (type) => {
+
+          const isEmptyList = (type === 'followers' ? userData.followers : userData.following)?.length === 0;
+
+    if (isEmptyList) {
+        console.log(`${type} list is empty`); // Optional log
+        return; // Prevent opening modal if the list is empty
+    }
+        setListType(type);
+        setListData(type === 'followers' ? userData.follwers : userData.following); // Use fetched data if available
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+    
+        // Set a timeout to open the modal after 1 second
+        timeoutRef.current = setTimeout(() => {
+            setIsListModalOpen(true);
+        }, 100);
+    };
+    useEffect(() => {
+        return () => {
+            clearTimeout(timeoutRef.current);
+        };
+    }, []);
+    const byteArray = (byteArray) => {
+        const binaryString = byteArray.map(byte => String.fromCharCode(byte)).join('');
+        return btoa(binaryString);
+    };
+
+    const base64 = userData?.image?.data?.data ? byteArray(userData.image.data.data) : '';
+    const image = base64 ? `data:image/jpeg;base64,${base64}` : '';
+
+    useEffect(() => {
+        const fetchDataForList = async () => {
+            try {
+                const responses = await Promise.all(
+                    listData.map(async (data) => {
+                        const response = await axios.get(`http://localhost:5000/sign/user/${data}`);
+                        return response.data;
+                    })
+                );
+
+                // Process images for each user
+                const responsesWithImages = responses.map(user => {
+                    const base64 = user?.image?.data?.data
+                        ? byteArrayToBase64(user.image.data.data)
+                        : '';
+                    const image = base64 ? `data:image/jpeg;base64,${base64}` : '';
+                    return { ...user, image };
+                });
+
+                setFetchedData(responsesWithImages); 
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        if (listData && listData.length > 0) {
+            fetchDataForList();
+        }
+    }, [listData]);
+    // Function to close list modal
+    const closeListModal = () => {
+        setIsListModalOpen(false);
+        // setFetchedData([]);
+    };
+    const hadleFollowers=(userid)=>{
+        navigate(`/Profile/${userid}`);
+        closeListModal();
+    }
+    useEffect(() => {
+        if (postIdData) {
+            setDate(new Date(postIdData.createdAt).toDateString());
+        }
+    }, [postIdData]);
+   
     return (
         <Box sx={{ overflowY: 'auto' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100vh' }}>
@@ -176,6 +338,7 @@ const UserProfile = () => {
                             overflowY: 'auto',
                         }}
                     >
+                        <Box display={'flex'} sx={{alignItems:"center"}}>
                         <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
                             <Avatar
                                 src={imageUrl}
@@ -189,7 +352,16 @@ const UserProfile = () => {
                                 <Typography variant="body2" color="text.secondary">{userData?.bio}</Typography>
                             </Box>
                         </Box>
-                        <Divider sx={{ marginBottom: 2 }} />
+                        <Box marginLeft={10} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 5 }}>
+                                <Typography sx={{ cursor: "pointer" }} onClick={() => openListModal('followers')}>
+                                    <strong>{userData?.follwers?.length}</strong> Followers
+                                </Typography>
+                                <Typography sx={{ cursor: "pointer" }} onClick={() => openListModal('following')}>
+                                    <strong>{userData?.following?.length}</strong> Following
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Divider sx={{ marginBottom: 2 }} color="gray" />
 
                         {userId && userId !== auth?.user?._id && (
                             <button
@@ -216,12 +388,13 @@ const UserProfile = () => {
                             justifyContent: 'space-between',
                             borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
                             paddingBottom: 1,
+                            marginBottom:4
                         }}>
                             <Typography variant="h6">Posts</Typography>
                             <Typography variant="body2" color="text.secondary">{posts?.length || 0} Posts</Typography>
                         </Box>
 
-                        <Divider sx={{ marginY: 2 }} />
+                        {/* <Divider sx={{ marginY: 2 }} /> */}
 
                         <Grid container spacing={2}>
                             {posts?.map((post) => (
@@ -282,6 +455,40 @@ const UserProfile = () => {
         >
             <CloseIcon />
         </IconButton>
+        
+        {(!userId ||userId === auth?.user?._id )&& (
+    <>
+        <IconButton
+            onClick={handleMenuOpen} // Attach menu open handler here
+            sx={{ position: 'absolute', top: 8, right: 40, color: 'grey.600' }}
+        >
+            <MoreVertIcon />
+        </IconButton>
+
+        <Menu
+            anchorEl={anchorEl}
+            open={isMenuOpen}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+        >
+            <MenuItem
+                onClick={() => {
+                    handleDeletePost(selectedPostId); // Make sure selectedPostId is defined
+                    handleMenuClose();
+                }}
+            >
+                Delete Post
+            </MenuItem>
+        </Menu>
+    </>
+)}
 
         {/* Left side: Image */}
         <Box sx={{ flex: 1, mr: 2 }}>
@@ -339,7 +546,7 @@ const UserProfile = () => {
                 </Typography>
             </Box>
             <Typography>
-                30/10/24
+            {date}
             </Typography>
             </Box>
             {/* Add New Comment */}
@@ -376,7 +583,42 @@ const UserProfile = () => {
         </Box>
     </Box>
 </Modal>
-
+<Modal open={isListModalOpen} onClose={closeListModal}>
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '400px',
+                    maxHeight: '80vh',
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 2,
+                    borderRadius: 2,
+                    overflowY: 'auto',
+                }}
+            >
+                <IconButton
+                    onClick={closeListModal}
+                    sx={{ position: 'absolute', top: 8, right: 8, color: 'grey.600' }}
+                >
+                    <CloseIcon />
+                </IconButton>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                    {listType === 'followers' ? 'Followers' : 'Following'}
+                </Typography>
+                {fetchData.map((user) => (
+                <Box key={user?._id} sx={{ display: 'flex', alignItems: 'center', mb: 2,cursor:"pointer" }} onClick={()=>{hadleFollowers(user?._id)}}>
+                    <Avatar src={user?.image} alt={user?.username} sx={{ mr: 2 }} />
+                    <Box>
+                        <Typography variant="body1">{user?.name}</Typography>
+                        <Typography variant="body2" color="black">@{user?.username}</Typography>
+                    </Box>
+                </Box>
+            ))}
+            </Box>
+        </Modal>
 
         </Box>
     );

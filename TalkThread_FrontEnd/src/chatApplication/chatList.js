@@ -234,6 +234,10 @@ export default function ChatList() {
     if (user._id) fetchConversations();
   }, [user._id]);
 
+  useEffect(()=>{
+    socket.on("AccountDeleted",fetchConversations);
+});
+
   useEffect(() => {
     const handleConversationUpdate = (data) => {
       console.log("chatlist",data);

@@ -189,7 +189,7 @@ export default function Login({ action }) {
               }
               label={
                 <Typography>
-                  Yes, I agree to the <Link to="#">Terms and Conditions</Link>
+                  Yes, I agree to the <Link to="/TermsAndConditions">Terms and Conditions</Link>
                 </Typography>
               }
             />

@@ -11,7 +11,10 @@
         Box,
         Modal,
         TextField,
+        List, ListItem, ListItemText, ListItemAvatar,
+        Button
     } from '@mui/material';
+    import { useNavigate } from 'react-router-dom';
     import { Favorite, ChatBubbleOutline,FavoriteBorder } from '@mui/icons-material';
     import 'bootstrap/dist/css/bootstrap.min.css';
     import axios from 'axios';
@@ -20,17 +23,20 @@
 import socket from '../socket';
     const CommentModal = ({ open, handleClose, post, userProfile, comments}) => {
         const auth = useAuth();
+        const navigate = useNavigate();
         const [newComment, setNewComment] = useState('');
         const [isLiked, setIsLiked] = useState(post.likes.includes(auth?.user?._id));
         const [likeCount, setLikeCount] = useState(post.likes.length || 0);
         const [comment, setComment] = useState([]); // Initialize as an empty array
-
+        const [date,setDate]=useState("Now");
         useEffect(() => {
             const fetchPost = async () => {
                 try {
                     const res = await axios.get(`http://localhost:5000/post/getHomePost/${post._id}`);
                     console.log(res);
                     setComment(res.data.comments);
+                    setIsLiked(res.data.likes.includes(auth?.user?._id));
+                    setLikeCount(res.data.likes.length);
                 } catch (error) {
                     console.error("Error fetching post data:", error);
                 }
@@ -39,11 +45,14 @@ import socket from '../socket';
             fetchPost();
         }, [post._id]); // Dependency array includes `post._id` to refetch if it changes
         
-        const fetchPost = async () => {
+        const fetchPost = async (data) => {
+            console.log(data);
             try {
                 const res = await axios.get(`http://localhost:5000/post/getHomePost/${post._id}`);
-                console.log(res);
+                // console.log(res);
                 setComment(res.data.comments);
+                setIsLiked(res.data.likes.includes(auth?.user?._id));
+                setLikeCount(res.data.likes.length);
             } catch (error) {
                 console.error("Error fetching post data:", error);
             }
@@ -56,10 +65,12 @@ import socket from '../socket';
                     userId: auth?.user?._id
                 });
                 console.log(res.data.likeCount);
-                setIsLiked(prevIsLiked => !prevIsLiked);
-                setLikeCount(res.data.likeCount);
-          
-
+                
+                // setLikeCount(res.data.likeCount);
+                const likecnt=res.data.likeCount
+                socket.emit("Likes",likecnt);
+                // setIsLiked(!isLiked); 
+                // setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
             } catch (error) {
                 console.error("Error liking post:", error);
             }
@@ -70,12 +81,13 @@ import socket from '../socket';
         const handleAddComment = async () => {
             if (newComment.trim()) {
                 try {
+                    
                 const res= await axios.put(`http://localhost:5000/post/addComment/${post?._id}`, {
                         userId: auth.user._id,
                         text: newComment,
                         name:auth?.user?.name
                     });
-                    
+                    socket.emit("comment",post?._id);
                     fetchPost();
                     setNewComment(''); // Clear the comment input after successful addition
                     
@@ -84,8 +96,24 @@ import socket from '../socket';
                 }
             }
         };
-     
-        
+        useEffect(() => {
+            socket.on("getComment", fetchPost);
+            return () => socket.off("getComment", fetchPost);
+        }, []);
+    
+        useEffect(() => {
+            socket.on("getLikes", fetchPost);
+            return () => socket.off("getLikes", fetchPost);
+        }, []);
+    
+        const handleUserName=(userid)=>{
+            navigate(`/Profile/${userid}`);
+        }
+        useEffect(() => {
+            if (post) {
+                setDate(new Date(post.createdAt).toDateString());
+            }
+        }, [post]);
         return (
             <Modal open={open} onClose={handleClose}>
             <Box
@@ -130,7 +158,7 @@ import socket from '../socket';
                         borderLeft: '1px solid rgba(0, 0, 0, 0.12)',
                     }}
                 >
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" gutterBottom onClick={()=>{handleUserName(userProfile._id)}} sx={{cursor:"pointer"}}>
                         {userProfile?.name || 'Unknown User'}
                     </Typography>
                     <Typography variant="body2" color="rgba(0,0,0,0.7)" gutterBottom>
@@ -159,7 +187,7 @@ import socket from '../socket';
                 {/* Check if commentItem is defined and has a name */}
                 {commentItem && (
                     <>
-                        <Typography variant="subtitle2">{commentItem.name}</Typography>
+                        <Typography variant="subtitle2" >{commentItem.name}</Typography>
                         <Typography
                             variant="body2"
                             color="black"
@@ -193,7 +221,7 @@ import socket from '../socket';
                     </Box>
                     <Box>
                     <Typography>
-                        30/10/24
+                    {date}
                     </Typography>
                     </Box>
                     </Box>
@@ -221,6 +249,7 @@ import socket from '../socket';
         </Modal>
         )}    
     const Post = ({ post, userProfile,onCommentClick }) => {
+        const navigate = useNavigate();
         const imageSrc = `data:image/png;base64,${post.post.data}`;
         const auth=useAuth();
         const [isLiked, setIsLiked] = useState(post.likes.includes(auth?.user?._id));
@@ -232,13 +261,33 @@ import socket from '../socket';
                     userId: auth?.user?._id
                 });
                 console.log(res.data.likeCount);
+                const likecnt=res.data.likeCount;
+                socket.emit("Likes",likecnt);
                 setIsLiked(prevIsLiked => !prevIsLiked);
                 setLikeCount(res.data.likeCount);
             } catch (error) {
                 console.error("Error liking post:", error);
             }
         };
+        const fetchPost = async (data) => {
+            console.log(data)
+            try {
+                const res = await axios.get(`http://localhost:5000/post/getHomePost/${post._id}`);
+                // console.log(res);
+                setIsLiked(res.data.likes.includes(auth?.user?._id));
+                setLikeCount(res.data.likes.length);
+            } catch (error) {
+                console.error("Error fetching post data:", error);
+            }
+        };
 
+        useEffect(() => {
+            socket.on("getLikes", fetchPost);
+            return () => socket.off("getLikes", fetchPost);
+        }, [fetchPost]);
+    
+        
+     
         const byteArrayToBase64 = (byteArray) => {
             if (!Array.isArray(byteArray)) {
                 console.error('Provided data is not an array');
@@ -251,15 +300,18 @@ import socket from '../socket';
         const base64String = userProfile?.image?.data?.data ? byteArrayToBase64(userProfile.image.data.data) : '';
         const imageUrl = base64String ? `data:image/jpeg;base64,${base64String}` : '';
 
+        const handleUserName=(userid)=>{
+            navigate(`/Profile/${userid}`);
+        }
         return (
-            <Box sx={{ marginBottom: 0.5 ,border:"3px solid skyblue",borderRadius:2}}>
+            <Box sx={{ marginBottom: 0.5 ,border:"3px solid black",borderRadius:2}}>
                 <Card variant="outlined" sx={{ boxShadow:5,borderRadius:2}}>
                     <CardMedia component="img" height="500" image={imageSrc} alt={post.caption} />
                     <Divider sx={{ borderColor: 'rgba(0, 0, 0, 0.8)' }} />
                     <CardContent sx={{ display: 'flex', alignItems: 'center', color: '#1E1E1E' }}>
                         <Avatar alt="User Image" src={imageUrl || ''} sx={{ width: 52, height: 52, marginRight: 2 }} />
                         <Box>
-                            <Typography variant="h6" color="rgba(0,0,0)">
+                            <Typography variant="h6" color="rgba(0,0,0)" onClick={()=>{handleUserName(userProfile._id)}} sx={{cursor:"pointer"}}>
                                 {userProfile ? userProfile.name : 'Unknown User'}
                             </Typography>
                             <Typography variant="body2" color="rgba(0,0,0,0.7)">
@@ -286,6 +338,85 @@ import socket from '../socket';
         );
     };
 
+    const FriendSuggestions = ({ suggestions}) => {
+        const auth=useAuth();
+        const [followStatuses, setFollowStatuses] = useState({})
+        const navigate = useNavigate();
+        console.log(suggestions);
+        const byteArrayToBase64 = (byteArray) => {
+            if (!Array.isArray(byteArray)) {
+                console.error('Provided data is not an array');
+                return null;
+            }
+            const binaryString = byteArray.map(byte => String.fromCharCode(byte)).join('');
+            return btoa(binaryString);
+        };
+        const handleSuggestion=(user)=>{
+            // console.log(user?._id);
+            navigate(`/Profile/${user?._id}`);
+            
+        }
+        // const toggleFollow = async (user) => {
+        //     try {
+        //         const action = followStatuses[user._id] ? 'unfollow' : 'follow';
+        //         const res = await axios.put(`http://localhost:5000/sign/follow/${user._id}`, {
+        //             action,
+        //             currentUserId: auth?.user?._id
+        //         });
+    
+        //         if (res.status === 200) {
+        //             // friendSuggestion();
+                   
+        //             setFollowStatuses(prevStatuses => ({
+        //                 ...prevStatuses,
+        //                 [user._id]: !prevStatuses[user._id] // Toggle follow status for this user
+        //             }));
+        //             refreshPosts();
+        //         } else {
+        //             console.error('Error updating follow status');
+        //         }
+        //     } catch (error) {
+        //         console.error('Failed to toggle follow status:', error);
+        //     }
+        // };
+        return (
+            <Box sx={{ bgcolor: 'background.paper', boxShadow: 3, p: 2, borderRadius: 2, mb: 2, maxWidth: '500px', width: "300px" }}>
+                <Typography variant="body" color={'black'}>Friend Suggestions</Typography>
+                <List>
+                    {suggestions.length > 0 ? (
+                        <List>
+                            {/* Limit to maximum of 10 suggestions */}
+                            {suggestions.slice(0, 10).map(user => {
+                                const imageUrl = user?.image ? `data:image/jpeg;base64,${user?.image?.data}` : '';
+        
+                                return (
+                                    <ListItem key={user._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, cursor: "pointer" }} onClick={() => { handleSuggestion(user) }}>
+                                            <ListItemAvatar>
+                                                <Avatar src={imageUrl} alt={user.name} />
+                                            </ListItemAvatar>
+                                            <Typography variant='body2' color="black" marginRight={2}>
+                                                {user.name}
+                                            </Typography>
+                                        </Box>
+                                        {/* Uncomment to enable follow/unfollow button */}
+                                        {/* <Button variant="contained" size="small" color="primary" onClick={() => { toggleFollow(user) }}>
+                                            {!followStatuses[user._id] ? "Follow" : "Unfollow"}
+                                        </Button> */}
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                            No suggestions available
+                        </Typography>
+                    )}
+                </List>
+            </Box>
+        );
+    }        
+
     const Home = () => {
         const [userProfiles, setUserProfiles] = useState([]);
         const [posts, setPosts] = useState([]);
@@ -293,20 +424,28 @@ import socket from '../socket';
         const [selectedPost, setSelectedPost] = useState(null);
         const [isModalOpen, setModalOpen] = useState(false);
         const [comments,setComments]=useState(null);
-
+        const [friendsuggestion,setFriendSuggestion]=useState([]);
         useEffect(() => {
             if (auth?.user?._id) {
                 console.log('User ID:', auth.user._id); // Debugging log
                 socket.emit("addUser", auth.user._id);
         
-                // Set up the listener for getUsers if necessary
-                // socket.on("getUsers", (users) => {
-                //     console.log("Connected users:", users); // For debugging
-                // });
             } else {
                 console.log('No user found or user ID is undefined'); // Debugging log
             }
         }, [auth?.user?._id]);
+        const refreshPosts = async () => {
+            try {
+                const userIds = [auth?.user?._id, ...userProfiles.map(profile => profile._id)].join(',');
+                const allPostsRes = await axios.get(`http://localhost:5000/post/getPost`, {
+                    params: { userIds }
+                });
+                setPosts(allPostsRes.data);
+            } catch (error) {
+                console.error('Error refreshing posts:', error);
+            }
+        };
+    
         useEffect(() => {
             const fetchFollowing = async () => {
                 try {
@@ -363,6 +502,34 @@ import socket from '../socket';
             console.log('Posts updated:', posts);
             console.log('Selected post updated:', selectedPost);
         }, [posts, selectedPost]);
+
+        useEffect(()=>{
+            const friendSuggestion=async()=>{
+                const res=await axios.get(`http://localhost:5000/sign/friendSuggestion/${auth?.user?._id}`);
+              setFriendSuggestion(res.data);
+
+            }
+            if(auth?.user?._id)
+            {
+                friendSuggestion();
+            }
+        },[])
+        useEffect(()=>{
+            socket.on("postDeleted",()=>{
+                refreshPosts();
+            })
+        })
+        useEffect(()=>{
+            socket.on("postCreated",(data)=>{
+                console.log(data);
+                refreshPosts();
+            })
+        })
+        useEffect(()=>{
+            socket.on("AccountDeleted",()=>{
+                refreshPosts();
+            });
+        });
         return (
             <Box
                 sx={{
@@ -372,12 +539,15 @@ import socket from '../socket';
                     height: '100vh',
                     padding: 0,
                     margin: 0,
-                    backgroundColor: '#121212',
+                    // backgroundColor: '#121212',
                     color: '#FFFFFF',
                 }}
             >
                 <Navbar />
-                <Box sx={{ flexGrow: 2, display: 'flex', justifyContent: 'center', overflowY: 'scroll' }} className="bg-secondary">
+                {/* <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'row', p: 2, }}> */}
+                
+     
+                <Box sx={{ flexGrow: 2, display: 'flex', overflowY: 'scroll',justifyContent:"space-evenly" }}>
                     <Box sx={{ height: '100vh', padding: 2, width: '100%', maxWidth: '500px' }}>
                         {posts.map(post => {
                             // Find the corresponding user profile for the post
@@ -387,7 +557,15 @@ import socket from '../socket';
                             );
                         })}
                     </Box>
+                    <Box marginTop={5} position={'relative'} left={100}>
+                    <FriendSuggestions suggestions={friendsuggestion} />
+                    </Box>
                 </Box>
+                {/* <Box sx={{ alignSelf: 'flex-start', position: 'sticky', top: 0, mt: 2 }}> */}
+               
+                              
+                {/* </Box>  */}
+                {/* </Box> */}
                 {selectedPost && (
                     <CommentModal
                     key={`${selectedPost._id}-${selectedPost?.comments?.length}`} // Unique key for re-rendering

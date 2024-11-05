@@ -2,7 +2,7 @@ import {
     Box, Stack, styled, Avatar, Badge, Typography,
     IconButton, TextField, InputAdornment,Modal
   } from '@mui/material';
-  import React, { useEffect, useRef, useState, useCallback } from 'react';
+  import React, { useEffect, useRef, useState, useCallback,useMemo } from 'react';
   import { Image, Smiley, PaperPlaneTilt, Phone, Info } from '@phosphor-icons/react';
   import Messages from './message';
   import Picker from '@emoji-mart/react';
@@ -89,7 +89,7 @@ const ChatInput = ({ setOpenPicker, newMessage, setNewMessage, handleSendMessage
       setSelectedImage(file);
       console.log('Selected image:', file);
     }
-  };
+  };  
 
   const sendMessage = () => {
     if ((!newMessage.trim() && !selectedImage) ) return;
@@ -182,12 +182,13 @@ const ChatInput = ({ setOpenPicker, newMessage, setNewMessage, handleSendMessage
 
 
 
-export default function Conversation({ conversation, open, CUser, fetchConversations }) {
+export default function Conversation({ conversation, open, CUser, fetchConversations,online }) {
     const [openPicker, setOpenPicker] = useState(false);
     const [showInfo, setShowInfo] = useState(false);
     const [conversationMessages, setConversationMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [user, setUser] = useState(null);
+    
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const messagesEndRef = useRef(null);
     const [receiver, setReceiver] = useState(null);
@@ -196,16 +197,16 @@ export default function Conversation({ conversation, open, CUser, fetchConversat
     const [isBlocked, setIsBlockedLocal] = useState(false);
     const [receiverBlocked,setReceiverBlocked]=useState(false);
     const [userData, setUserData] = useState(null);
-   
+   const[friend,setfriendId]=useState(null);
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
-
+    const [isUserOnline, setIsUserOnline] = useState(false);
     // Function to open image in modal
     const openImageModal = (imageSrc) => {
         setSelectedImage(imageSrc);
         setImageModalOpen(true);
     };
-
+console.log(online);
     const closeImageModal = () => {
         setImageModalOpen(false);
         setSelectedImage(null);
@@ -242,16 +243,44 @@ export default function Conversation({ conversation, open, CUser, fetchConversat
           // socket.off("unblockeduser");
       };
   }, []);
+
+  useEffect(() => {
+    if (auth?.user?._id) {
+      // Add current user to online users list via socket
+      socket.emit("addUser", auth?.user?._id);
+  
+      // Listen for updated list of online users
+      socket.on("getUsers", (data) => {
+        setOnlineUsers(data);
+  
+        // Check if the friend's ID is in the online users list
+        const friendId = conversation?.members.find((m) => m !== CUser?._id);
+        const isFriendOnline = data.some((onlineUser) => onlineUser.userId === friendId);
+  
+        // Update the `isUserOnline` state accordingly
+        setIsUserOnline(isFriendOnline);
+      });
+    }
+  
+    // Cleanup the socket listener on component unmount
+    return () => {
+      socket.off("getUsers");
+    };
+  }, [auth?.user?._id, conversation]);// Added friend to dependencies if it changes
+// Add `friend` to the dependency array if it can change
+
+
   const getUsersData = async () => {
     try {
       const friendId = conversation?.members.find((m) => m !== CUser?._id);
       console.log(friendId);
+      setfriendId(friendId);
       const response = await axios.get(`http://localhost:5000/sign/user/${friendId}`);
       const friendData = response.data;
       console.log("friendData", friendData);
 
       // Check if the senderId is in the blockedUsers array
-      const isSenderBlocked = friendData.blockedUsers.includes(CUser._id);
+      const isSenderBlocked = friendData.blockedUsers.includes(CUser?._id);
     // consolelog(isSenderBlocked)
       setReceiverBlocked(isSenderBlocked);
       console.log("receiverBlocked", isSenderBlocked);
@@ -329,8 +358,10 @@ useEffect(() => {
                 const friendId = conversation?.members.find((m) => m !== CUser?._id);
                 const res = await axios.get(`http://localhost:5000/sign/user/${friendId}`);
                 setReceiver(friendId);
-                console.log("res",res.data.blockedUsers);
+                console.log("res",res.data);
                 setUser(res.data);
+                console.log(user);
+
                 // setBlockData(res.data.block);
             } catch (error) {
                 console.error("Error fetching user:", error);
@@ -340,20 +371,37 @@ useEffect(() => {
         getUser();
     }, [conversation, CUser]);
 
+  //   useEffect(() => {
+  //     const handleGetUsers = (users) => {
+  //         console.log("Online users:", users);
+  //         setOnlineUsers(users.map((user) => user.userId));
+  //     };
+  
+  //     socket.on("getusers", handleGetUsers);
+  
+  //     // Cleanup to remove listener on component unmount
+  //     // return () => {
+  //     //     socket.off("getusers", handleGetUsers);
+  //     // };
+  // }, []);
+
     // Add the current user to the socket's active user list
-    useEffect(() => {
-      if (CUser?._id) {
-          // Emit the addUser event with the current user's ID
-          socket.emit("addUser", CUser._id);
+  //   useEffect(() => {
+  //     if (CUser?._id) {
+  //         // Emit the addUser event with the current user's ID
+  //         socket.emit("addUser", CUser._id);
           
-          // Set up the listener for getUsers
-          const handleGetUsers = (users) => {
-              setOnlineUsers(users.map((user) => user.userId));
-          };
-          socket.on("getUsers", handleGetUsers);
+  //         // Set up the listener for getUsers
+  //         const handleGetUsers = (users) => {
+  //             setOnlineUsers(users.map((user) => user.userId));
+  //         };
+  //         socket.on("getUsers", handleGetUsers);
          
-      }
-  }, [CUser]);
+  //     }
+  // }, [CUser]);
+
+
+
 // Handle message read/unread notification
 // useEffect(() => {
 //   const markMessageAsRead = async (messageId) => {
@@ -566,6 +614,12 @@ useEffect(() => {
         socket.off("getReaction", handleMessageReaction);
     };
 }, [conversation]);
+
+
+console.log(friend)
+console.log(onlineUsers.includes(friend));
+
+
     return (
       <Stack height="100%" maxHeight="100vh" sx={{ width: '100%' }}>
       {conversation ? (
@@ -579,7 +633,7 @@ useEffect(() => {
                               <Badge
                                   overlap="circular"
                                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                  variant={onlineUsers.includes(user?._id) ? 'dot' : 'undefined'}
+                                  variant={isUserOnline ? 'dot' : 'undefined'}
                                   sx={{ '& .MuiBadge-badge': { backgroundColor: '#44b700', color: '#44b700' } }}
                               >
                                   <Avatar alt="User Avatar" src={userData?.userProfile?.profile || ''} />
@@ -588,7 +642,7 @@ useEffect(() => {
                           <Stack spacing={0.3}>
                               {/* User's name and online status */}
                               <Typography variant="subtitle2">{user?.name}</Typography>
-                              {onlineUsers.includes(user?._id) ? 'Online' : 'Offline'}
+                              {isUserOnline? 'Online' : 'Offline'}
                           </Stack>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={1} marginRight="10px">

@@ -121,5 +121,20 @@ async Likes(req,res)
             res.status(500).json({ message: 'Server error', error: error.message });
         }
     };
+    async DeletePost(req,res){
+       const postId =req.params.postId;
+       try{
+        const post=await PostModel.findByIdAndDelete(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        res.status(200).json(post);
+       }
+       catch(error)
+       {
+        console.error("Error fetching post:", error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+       }
+    }
 }
 module.exports = new PostController();

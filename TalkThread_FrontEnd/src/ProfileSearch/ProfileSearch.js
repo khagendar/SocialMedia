@@ -8,6 +8,18 @@ import { useNavigate } from 'react-router-dom';
 
 // Chat Account Component: Displays user details
 const ChatAccounts = ({ user, onClick }) => {
+  // console.log(user);
+  const byteArrayToBase64 = (byteArray) => {
+    if (!Array.isArray(byteArray)) {
+        console.error('Provided data is not an array');
+        return null;
+    }
+    const binaryString = byteArray.map(byte => String.fromCharCode(byte)).join('');
+    return btoa(binaryString);
+};
+
+const base64String = user?.image?.data?.data ? byteArrayToBase64(user.image.data.data) : '';
+const imageUrl = base64String ? `data:image/jpeg;base64,${base64String}` : '';
   return (
     <Box
       onClick={onClick}
@@ -23,10 +35,10 @@ const ChatAccounts = ({ user, onClick }) => {
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Stack direction="row" spacing={2}>
-          <Avatar src={user?.avatar || '/default-avatar.png'} />
+          <Avatar src={imageUrl || '/default-avatar.png'} />
           <Stack spacing={0.3}>
             <Typography variant="subtitle2">{user?.name || 'User'}</Typography>
-            <Typography variant="caption">Keep always smile on your face</Typography>
+            <Typography variant="caption">{user.username}</Typography>
           </Stack>
         </Stack>
       </Stack>
@@ -77,6 +89,17 @@ const Search = () => {
   return (
     <Box display={'flex'} flexDirection={"row"} height={'100vh'} width={"100%"}>
       <Navbar />
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        alignItems="center" 
+        justifyContent="center" 
+        flexGrow={1} // Expands this Box to take up remaining space
+    >
+        <Typography variant="h5" >
+            Search Profiles
+        </Typography>
+    </Box>
       <Modal open={open} onClose={() => setOpen(false)} sx={{ backdropFilter: "blur(4px)" }}>
         <Box
           sx={{

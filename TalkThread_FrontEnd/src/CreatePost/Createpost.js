@@ -4,6 +4,7 @@ import { Box, Card, CardContent, CardActions, Typography, TextField, Button, Ico
 import { PhotoCamera, Delete } from '@mui/icons-material';
 import axios from 'axios'; // Import Axios for making HTTP requests
 import { useAuth } from '../Routes/AuthContex';
+import socket from '../socket';
 const CreatePost = () => {
     const [post, setPost] = useState(null);
     const [caption, setCaption] = useState('');
@@ -69,6 +70,8 @@ const CreatePost = () => {
                     'Content-Type': 'multipart/form-data', // Specify the content type
                 },
             });
+            const res=response.data;
+            socket.emit("createPost",res);
             // Handle success (e.g., show a success message or reset the form)
             setPost(null); // Clear the image file
             setCaption(''); // Clear the caption

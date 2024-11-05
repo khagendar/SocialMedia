@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Divider, Stack, IconButton, Avatar, Menu, MenuItem, Typography, Modal } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import logo from '../chatApplication/images/logo1.png';
+import logo from '../chatApplication/images/logo1_removebg_preview_jcK_icon.ico';
 import home from '../chatApplication/images/home.png';
 import group from '../chatApplication/images/group.png';
 import menuIcon from '../chatApplication/images/menu.png';
@@ -17,7 +17,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
 import ChatIcon from '../Images/chatIcon.webp';
-import Dictionary from '../Images/9100963.png';
+import Dictionary from '../Images/dictionary.svg';
 import Dict from '../chatApplication/Dictionary';
 const Chat = () => {
   const theme = useTheme();
@@ -85,26 +85,30 @@ const Chat = () => {
     console.log("Logging out...");
     socket.emit("logout");
     auth.logout();
-    navigate("/");
+    navigate("/signin");
   };
+  const handleSettings=()=>{
+    navigate('/settings')
+  }
   const [modalOpen, setModalOpen] = useState(false);
   return (
     <Box height={'100vh'} sx={{ borderRight: "1px solid black" }}>
-      <Box
-        p={2}
-        component="section"
-        sx={{
-          height: '100vh',
-          display: 'flex',
-          backgroundColor: 'white',
-          justifyContent: 'space-between',
-          position: 'relative',
-        }}
-      >
+  <Box
+    p={2}
+    component="section"
+    sx={{
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'space-between',
+      position: 'relative',
+      
+    }}
+  >
         <Box sx={{ width: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <Stack direction="column" alignItems="center" width="100%" spacing={3}>
             <IconButton aria-label="logo" size="large" onClick={()=>{navigate('/home')}}>
-              <img src={logo} alt="logo" style={{ width: 30, height: 30, objectFit: 'contain' }} />
+              <img src={logo} alt="logo" style={{ width: 30, height: 30,objectFit: 'contain', 
+    borderRadius: '50%' }} />
             </IconButton>
 
             <Stack direction="column" alignItems="center" width="max-content">
@@ -250,7 +254,7 @@ const Chat = () => {
             }}
           >
             <MenuItem onClick={handleClose}>
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={2} alignItems="center" onClick={()=>{handleSettings()}}>
                 <Gear size={25} />
                 <Typography variant="body2" fontSize="15px">
                   Settings
