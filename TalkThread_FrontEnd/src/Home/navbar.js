@@ -1,6 +1,6 @@
 import { CodeSimple, Gear } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom'; // Correct import
-import { cilHome, cilPlus, cilSearch, cilUser, cilChatBubble } from '@coreui/icons';
+import { cilHome, cilPlus, cilSearch, cilUser, cilChatBubble,cilLocationPin } from '@coreui/icons';
 import { CIcon } from '@coreui/icons-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Divider, Stack, IconButton, Avatar, Menu, MenuItem, Typography, Modal } from '@mui/material';
@@ -78,19 +78,22 @@ const Navbar = () => {
               }}
             >
               <CNavItem href="/home">
-                <CIcon customClassName="nav-icon" icon={cilHome} /> <strong>Home</strong>
+              <CIcon customClassName="nav-icon" icon={cilHome} style={{ color: 'black' }} /> <strong>Home</strong>
               </CNavItem>
               <CNavItem href="/Search">
-                <CIcon customClassName="nav-icon" icon={cilSearch} /> <strong>Search</strong>
+                <CIcon customClassName="nav-icon" icon={cilSearch} style={{ color: 'black' }}/> <strong>Search</strong>
               </CNavItem>
               <CNavItem href="/chat">
-                <CIcon customClassName="nav-icon" icon={cilChatBubble} /><strong> Chat</strong>
+                <CIcon customClassName="nav-icon" icon={cilChatBubble} style={{ color: 'black' }}/><strong> Chat</strong>
               </CNavItem>
               <CNavItem href="/Createpost">
-                <CIcon customClassName="nav-icon" icon={cilPlus} /> <strong>Create</strong>
+                <CIcon customClassName="nav-icon" icon={cilPlus} style={{ color: 'black' }}/> <strong>Create</strong>
               </CNavItem>
               <CNavItem href="/Profile">
-                <CIcon customClassName="nav-icon" icon={cilUser} /> <strong>Profile</strong>
+                <CIcon customClassName="nav-icon" icon={cilUser} style={{ color: 'black' }}/> <strong>Profile</strong>
+              </CNavItem>
+              <CNavItem href="/Location">
+                <CIcon customClassName="nav-icon" icon={cilLocationPin} style={{ color: 'black' }} /> <strong>Location</strong>
               </CNavItem>
             </div>
             <Box display={'flex'} flexDirection={'row'} alignItems={'center'} marginTop={30}>

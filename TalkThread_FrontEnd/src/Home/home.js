@@ -425,6 +425,57 @@ import socket from '../socket';
         const [isModalOpen, setModalOpen] = useState(false);
         const [comments,setComments]=useState(null);
         const [friendsuggestion,setFriendSuggestion]=useState([]);
+        const [location, setLocation] = useState({ latitude: null, longitude: null });
+        const [error, setError] = useState(null);
+        const getLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const coords = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                        };
+                        setLocation(coords); // Set location
+                        setError(null); // Clear any previous errors
+                    },
+                    (error) => {
+                        setError("Unable to retrieve location.");
+                        console.error(error);
+                    }
+                );
+            } else {
+                setError("Geolocation is not supported by this browser.");
+            }
+        };
+    
+        // Send location to server whenever location state is updated
+        useEffect(() => {
+            if (location.latitude && location.longitude) {
+                sendLocationToServer(location);
+            }
+        }, [location]); // Dependency array includes location
+    
+        // Function to send location to the backend
+        const sendLocationToServer = async (coords) => {
+            try {
+                const res= await axios.put(`http://localhost:5000/sign/Location/${auth?.user?._id}`,
+                    {
+                        longitude: coords.longitude,
+                        latitude: coords.latitude,
+                    }
+                );
+                console.log(res.data);
+                console.log("Location saved successfully!");
+            } catch (error) {
+                console.error("Error saving location:", error);
+                setError("Failed to save location.");
+            }
+        };
+    
+        // Automatically retrieve location on mount
+        useEffect(() => {
+            getLocation();
+        }, []);
         useEffect(() => {
             if (auth?.user?._id) {
                 console.log('User ID:', auth.user._id); // Debugging log

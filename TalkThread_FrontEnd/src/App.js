@@ -18,7 +18,7 @@ import ProfielSearch from './ProfileSearch/ProfileSearch.js';
 import ErrorPage from './Error.js';
 import Terms from './Terms&Conditions/Terms';
 import Settings from './Settings/Settings.js';
-
+import Location from '../src/Location/Location.js';
 function AppContent() {
     const location = useLocation();
     const isBackgroundVisible = location.pathname === '/signin' || location.pathname === '/signup';
@@ -50,6 +50,7 @@ function AppContent() {
                             <Route path='/Search' element={<ProfielSearch />} />
                             <Route path="/Profile/:userId" element={<Profile />} />
                             <Route path="/settings/*" element={<Settings />} />
+                            <Route path="/Location" element={<Location/>} />
                         </Route>
 
                         {/* Error Page Route */}

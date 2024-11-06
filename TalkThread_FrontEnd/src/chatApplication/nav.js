@@ -136,7 +136,7 @@ const Chat = () => {
                   transition: 'border 0.3s ease',
                 }}
               >
-               <SearchIcon />
+               <SearchIcon sx={{color:"black"}}/>
               </IconButton>
               <Divider sx={{ width: '100%', my: 1 }} />
               <IconButton
@@ -160,7 +160,7 @@ const Chat = () => {
                   transition: 'border 0.3s ease',
                 }}
               >
-                  <AddCircleOutlineIcon  />
+                  <AddCircleOutlineIcon sx={{color:"black"}}  />
               </IconButton>
               <Divider sx={{ width: '100%', my: 1 }} />
               <IconButton
@@ -172,7 +172,7 @@ const Chat = () => {
                   transition: 'border 0.3s ease',
                 }}
               >
-                   <PermIdentityOutlinedIcon />
+                   <PermIdentityOutlinedIcon sx={{color:"black"}} />
               </IconButton>
               <Divider sx={{ width: '100%', my: 1 }} />
               <IconButton

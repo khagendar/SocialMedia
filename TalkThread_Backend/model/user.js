@@ -39,6 +39,10 @@ const UserSchema = new mongoose.Schema(
     blockedUsers: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     ], // Array of blocked users
+    location: {
+      longitude: { type: Number, default: null },
+      latitude: { type: Number, default: null }
+    },
   following:[
     { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   ],

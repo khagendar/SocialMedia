@@ -28,6 +28,32 @@ async getAllUsers(req, res) {
     res.status(500).json({ message: "Error retrieving users", error });
   }
 }
+ async Location (req, res){
+  const { id } = req.params;
+  const { longitude, latitude } = req.body;
+
+  if (!longitude || !latitude) {
+      return res.status(400).json({ error: "Longitude and latitude are required." });
+  }
+
+  try {
+      // Find user by ID and update location
+      const user = await UserModel.findByIdAndUpdate(
+          id,
+          { location: { longitude, latitude } },
+          { new: true, runValidators: true }
+      );
+
+      if (!user) {
+          return res.status(404).json({ error: "User not found." });
+      }
+
+      res.status(200).json({ message: "Location updated successfully.", user });
+  } catch (error) {
+      console.error("Error updating location:", error);
+      res.status(500).json({ error: "Internal server error." });
+  }
+};
 
 }
 

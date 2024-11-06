@@ -47,4 +47,5 @@ router.put('/follow/:userId',LoginController.followers);
 router.get('/friendSuggestion/:userId',Mypost.FriendSuggestions);
 router.put('/changePassword',LoginController.changePassword);
 router.delete('/deleteAccount/:userId',LoginController.deleteUserAccount);
+router.put('/Location/:id',userController.Location);
 module.exports = router;

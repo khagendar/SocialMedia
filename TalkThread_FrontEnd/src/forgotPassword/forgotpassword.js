@@ -63,7 +63,7 @@ export default function ForgotPassword() {
   return (
     <Stack justifyContent="center" alignItems="center" height="100vh"> {/* Center the layout */}
      
-    <Box p={3} boxShadow={3} bgcolor="rgb(210, 220, 290)" width={400} height={500} display="flex" flexDirection="column"  sx={{ borderRadius: 2 }}>
+    <Box p={3} boxShadow={3} width={400} height={500} display="flex" flexDirection="column"  sx={{ borderRadius: 2 }}>
     <form onSubmit={handleSubmit}>
       <Stack spacing={2} sx={{ width: '300px', margin: '0 auto' }}>
         <Typography variant='h6' color={'Purple'}>
