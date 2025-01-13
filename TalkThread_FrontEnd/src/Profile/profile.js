@@ -238,7 +238,7 @@ const UserProfile = () => {
     };
     const openListModal = (type) => {
 
-          const isEmptyList = (type === 'followers' ? userData.followers : userData.following)?.length === 0;
+          const isEmptyList = (type === 'followers' ? userData.follwers : userData.following)?.length === 0;
 
     if (isEmptyList) {
         console.log(`${type} list is empty`); // Optional log

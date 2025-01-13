@@ -1,73 +1,112 @@
-import { Box, Typography } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useAuth } from "../Routes/AuthContex";
+import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet-routing-machine';
+import 'leaflet/dist/leaflet.css';
+// import './MapComponent.css'; // Custom CSS for styling
+import { useLocation } from 'react-router-dom';
+const MapComponent = () => {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const location = useLocation();
+  const {fridestination } = location.state || {};
+  // Define the destination coordinates
+  const destination = L.latLng(fridestination[0], fridestination[1]);
+    console.log(fridestination);
+  useEffect(() => {
+    if (mapRef.current && !mapInstance.current) {
+      const initialMap = L.map(mapRef.current, {
+        center: [17.196608008058988, 78.59761239847006], // Default location
+        zoom: 18,
+      });
 
-export default function Location() {
-    const [location, setLocation] = useState({ latitude: null, longitude: null });
-    const [error, setError] = useState(null);
-    const auth=useAuth();
-    const getLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const coords = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                    };
-                    setLocation(coords); // Set location
-                    setError(null); // Clear any previous errors
-                },
-                (error) => {
-                    setError("Unable to retrieve location.");
-                    console.error(error);
-                }
-            );
-        } else {
-            setError("Geolocation is not supported by this browser.");
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(initialMap);
+
+      mapInstance.current = initialMap;
+    }
+
+    // Get user's location with higher accuracy
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLatLng = L.latLng(position.coords.latitude, position.coords.longitude);
+          setUserLocation(userLatLng);
+          console.log(position.coords.latitude, position.coords.longitude)
+          if (mapInstance.current) {
+            // Create custom SVG icons for markers
+            const userIcon = L.divIcon({
+              html: `
+                <svg viewBox="0 0 24 24" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" fill="#2196F3" stroke="white" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="5" fill="white"/>
+                </svg>
+              `,
+              className: '',
+              iconSize: [32, 32],
+              iconAnchor: [16, 32],
+            });
+
+            const friendIcon = L.divIcon({
+              html: `
+                <svg viewBox="0 0 24 24" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+                        fill="#FF5722" stroke="white" stroke-width="2"/>
+                  <circle cx="12" cy="9" r="3" fill="white"/>
+                </svg>
+              `,
+              className: '',
+              iconSize: [32, 32],
+              iconAnchor: [16, 32],
+            });
+
+            // Add the user's location marker
+            L.marker(userLatLng, { icon: userIcon, draggable: false })
+              .addTo(mapInstance.current)
+              .bindPopup('You')
+              .openPopup();
+
+            // Add a marker for the destination
+            L.marker(destination, { icon: friendIcon, draggable: false })
+              .addTo(mapInstance.current)
+              .bindPopup('Your Friend')
+              .openPopup();
+
+            // Create a routing control
+            L.Routing.control({
+              waypoints: [userLatLng, destination],
+              routeWhileDragging: false,
+              createMarker: () => null,
+            }).addTo(mapInstance.current);
+          }
+        },
+        (error) => {
+          console.error("Error getting location: ", error);
+        },
+        {
+          enableHighAccuracy: true,  // Request higher accuracy (GPS)
+          timeout: 10000,            // Set a timeout (in milliseconds)
+          maximumAge: 0,             // Don't use a cached position
         }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
     };
+  }, []); // Empty dependency array to run effect only once when component mounts
 
-    // Send location to server whenever location state is updated
-    useEffect(() => {
-        if (location.latitude && location.longitude) {
-            sendLocationToServer(location);
-        }
-    }, [location]); // Dependency array includes location
+  return (
+    <div>
+      <div ref={mapRef} style={{ height: '100dvh', width: '100dvw' }}></div>
+    </div>
+  );
+};
 
-    // Function to send location to the backend
-    const sendLocationToServer = async (coords) => {
-        try {
-            const res= await axios.put(`http://localhost:5000/sign/Location/${auth?.user?._id}`,
-                {
-                    longitude: coords.longitude,
-                    latitude: coords.latitude,
-                }
-            );
-            console.log(res.data);
-            console.log("Location saved successfully!");
-        } catch (error) {
-            console.error("Error saving location:", error);
-            setError("Failed to save location.");
-        }
-    };
-
-    // Automatically retrieve location on mount
-    useEffect(() => {
-        getLocation();
-    }, []);
-
-    return (
-        <Box>
-            <Typography variant="h5">Location</Typography>
-            {location.latitude && location.longitude ? (
-                <Box mt={2}>
-                    <Typography>Latitude: {location.latitude}</Typography>
-                    <Typography>Longitude: {location.longitude}</Typography>
-                </Box>
-            ) : (
-                <Typography mt={2}>{error || "Retrieving location..."}</Typography>
-            )}
-        </Box>
-    );
-}
+export default MapComponent;

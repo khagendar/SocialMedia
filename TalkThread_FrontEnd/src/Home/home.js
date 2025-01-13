@@ -431,10 +431,12 @@ import socket from '../socket';
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
+                        console.log(position);
                         const coords = {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                         };
+                        
                         setLocation(coords); // Set location
                         setError(null); // Clear any previous errors
                     },
@@ -453,7 +455,7 @@ import socket from '../socket';
             if (location.latitude && location.longitude) {
                 sendLocationToServer(location);
             }
-        }, [location]); // Dependency array includes location
+        }, [location]);// Dependency array includes location
     
         // Function to send location to the backend
         const sendLocationToServer = async (coords) => {

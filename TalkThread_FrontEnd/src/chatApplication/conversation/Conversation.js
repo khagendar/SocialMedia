@@ -665,6 +665,7 @@ console.log(onlineUsers.includes(friend));
                       CurrentUser={CUser} 
                       refreshConversation={refreshConversation} 
                       conversation={conversation}
+                      IsUserOnline={isUserOnline}
                   />
               </Box>
   

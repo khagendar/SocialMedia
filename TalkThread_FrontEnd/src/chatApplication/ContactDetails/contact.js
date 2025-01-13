@@ -4,7 +4,7 @@ import close from '../images/close.png';
 import Details from './details';
 import axios from 'axios'; // Ensure axios is imported
 
-const Contact = React.memo(({ showInfo, setShowInfo, isBlocked,setIsBlocked, receiver,CurrentUser,refreshConversation,conversation }) => {
+const Contact = React.memo(({ showInfo, setShowInfo, isBlocked,setIsBlocked, receiver,CurrentUser,refreshConversation,conversation, IsUserOnline }) => {
   const [currentView, setCurrentView] = useState('details');
   const [receiverDetails, setReceiverDetails] = useState(null); // State to store receiver's details
   const contactRef = useRef(null); // Ref to track the contact box
@@ -118,7 +118,7 @@ const [userData,setUserData]=useState(null);
         <Box sx={{ maxWidth:'250px', backgroundColor: '#f0f0f0', padding: 2 }}>
           {/* Render Details component if currentView is 'details' */}
           {currentView === 'details' && (
-            <Details isBlocked={isBlocked} setIsBlocked={setIsBlocked} receiverDetails={receiverDetails} CurrentUser={CurrentUser} refreshConversation={refreshConversation} conversation={conversation} userData={userData} />
+            <Details isBlocked={isBlocked} setIsBlocked={setIsBlocked} receiverDetails={receiverDetails} CurrentUser={CurrentUser} refreshConversation={refreshConversation} conversation={conversation} userData={userData}  IsUserOnline={IsUserOnline}/>
           )}
         </Box>
       </Stack>

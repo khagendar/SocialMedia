@@ -20,6 +20,7 @@ import { useAuth } from '../Routes/AuthContex';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import menuIcon from '../chatApplication/images/menu.png';
 import socket from '../socket';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 const Navbar = () => {
   const auth =useAuth();
   const navigate = useNavigate(); // Correctly use useNavigate
@@ -48,8 +49,8 @@ const Navbar = () => {
   navigate('/settings');
  }
   return  (
-    <div style={{ borderRight: '1px solid black', height: '100vh' }}> {/* Wrap with a div */}
-      <CSidebar className="border-end"> {/* No custom class here */}
+    
+      <CSidebar className="border-end border-secondary" > {/* No custom class here */}
         <CSidebarNav>
           <div
             style={{
@@ -92,11 +93,9 @@ const Navbar = () => {
               <CNavItem href="/Profile">
                 <CIcon customClassName="nav-icon" icon={cilUser} style={{ color: 'black' }}/> <strong>Profile</strong>
               </CNavItem>
-              <CNavItem href="/Location">
-                <CIcon customClassName="nav-icon" icon={cilLocationPin} style={{ color: 'black' }} /> <strong>Location</strong>
-              </CNavItem>
+              
             </div>
-            <Box display={'flex'} flexDirection={'row'} alignItems={'center'} marginTop={30}>
+            <Box display={'flex'} flexDirection={'row'} alignItems={'center'} >
               <IconButton onClick={handleMenuOpen} display={"flex"} sx={{alignItems:'flex-start', justifyContent:'flex-start'}}>
                 <img src={menuIcon} alt="menu" style={{ width: 30, height: 30, objectFit: 'contain' }} />
               </IconButton>
@@ -147,7 +146,7 @@ const Navbar = () => {
           </div>
         </CSidebarNav>
       </CSidebar>
-    </div>
+    
   );
 };
 
